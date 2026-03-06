@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk/*/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android \
+            /usr/share/swift /opt/hostedtoolcache/CodeQL
+          sudo apt-get clean
+          df -h
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Update Android SDK CMake version
+        run: |
+          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
+
+      - name: Decode keystore
+        run: echo "${{ secrets.SIGNING_KEY }}" | tr -d '\n\r ' | base64 -d > /tmp/release.jks
+
+      - name: Build & sign release APK
+        env:
+          ANDROID_KEYSTORE_FILE: /tmp/release.jks
+          ANDROID_KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd src/android
+          chmod +x ./gradlew
+          ./gradlew assembleVanillaRelease
+
+      - name: Rename APK
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          APK=$(find src/android/app/build -name '*.apk' -path '*/vanilla/release/*' | head -1)
+          mv "$APK" "azahar-lnk-${TAG_NAME}.apk"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Azahar Lnk ${{ github.ref_name }}
+          body: ""
+          files: azahar-lnk-${{ github.ref_name }}.apk
+          draft: true
+          prerelease: false
