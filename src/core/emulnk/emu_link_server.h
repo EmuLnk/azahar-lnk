@@ -5,6 +5,7 @@
 #pragma once
 
 #include <atomic>
+#include <string>
 #include <thread>
 #include "common/common_types.h"
 
@@ -38,9 +39,10 @@ private:
     std::thread m_thread;
     socket_t m_socket{INVALID_SOCK};
 
+    std::string m_metadata_composite;
+
     static constexpr u16 PORT = 55355;
     static constexpr std::size_t MAX_READ_SIZE = 1024;
-    static constexpr u32 VIRTUAL_SERIAL_ADDR = 0x00200000;
 };
 
 } // namespace Core::EmuLnk

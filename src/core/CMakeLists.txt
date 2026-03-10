@@ -40,6 +40,8 @@ add_library(citra_core STATIC
     dumping/backend.h
     dumping/ffmpeg_backend.cpp
     dumping/ffmpeg_backend.h
+    emulnk/emu_link_server.cpp
+    emulnk/emu_link_server.h
     file_sys/archive_artic.cpp
     file_sys/archive_artic.h
     file_sys/archive_backend.cpp

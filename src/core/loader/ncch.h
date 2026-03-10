@@ -64,6 +64,9 @@ public:
 
     ResultStatus ReadProgramId(u64& out_program_id) override;
 
+    ResultStatus ReadProductInfo(std::string& out_product_code,
+                                 u16& out_remaster_version) override;
+
     ResultStatus ReadExtdataId(u64& out_extdata_id) override;
 
     ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;

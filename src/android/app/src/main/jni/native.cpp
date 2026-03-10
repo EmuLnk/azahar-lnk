@@ -36,6 +36,7 @@
 #include "common/string_util.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
+#include "core/emulnk/emu_link_server.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
 #include "core/hle/service/am/am.h"
@@ -153,6 +154,7 @@ static void TryShutdown() {
 
     Core::System& system{Core::System::GetInstance()};
 
+    Core::EmuLnk::EmuLinkServer::Instance().Stop();
     system.Shutdown();
     system.EjectCartridge();
 
@@ -264,6 +266,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     if (load_result != Core::System::ResultStatus::Success) {
         return load_result;
     }
+
+    Core::EmuLnk::EmuLinkServer::Instance().Start();
 
     stop_run = false;
     pause_emulation = false;

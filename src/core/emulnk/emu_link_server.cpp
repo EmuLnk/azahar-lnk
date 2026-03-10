@@ -96,6 +96,8 @@ void EmuLinkServer::Stop() {
         m_thread.join();
     }
 
+    m_metadata_composite.clear();
+
     LOG_INFO(Network, "EmuLinkServer: Stopped");
 
 #ifdef _WIN32
@@ -121,10 +123,33 @@ void EmuLinkServer::ServerLoop() {
 
         const auto received_size = static_cast<std::size_t>(received);
 
-        // EMLK handshake: client sends "EMLK" (4 bytes), server responds with emulator name
-        if (received_size == 4 && std::memcmp(buffer, "EMLK", 4) == 0) {
-            const char response[] = "azahar";
-            sendto(m_socket, response, sizeof(response) - 1, 0,
+        // EMLKV2 handshake: 6-byte magic -> respond with JSON
+        if (received_size == 6 && std::memcmp(buffer, "EMLKV2", 6) == 0) {
+            auto& system = Core::System::GetInstance();
+            const u64 tid = system.GetTitleID();
+
+            // Lazy-build metadata composite (cached)
+            if (m_metadata_composite.empty()) {
+                char composite[128];
+                std::snprintf(composite, sizeof(composite), "%016llX:%s:%04X:%08X",
+                              static_cast<unsigned long long>(tid),
+                              system.GetProductCode().c_str(),
+                              system.GetRemasterVersion(),
+                              system.GetCodeCRC());
+                m_metadata_composite = composite;
+            }
+
+            char tid_hex[17];
+            std::snprintf(tid_hex, sizeof(tid_hex), "%016llX",
+                          static_cast<unsigned long long>(tid));
+
+            char json[512];
+            std::snprintf(json, sizeof(json),
+                "{\"emulator\":\"azahar\",\"game_id\":\"%s\","
+                "\"game_hash\":\"%s\",\"platform\":\"3DS\"}",
+                tid_hex, m_metadata_composite.c_str());
+
+            sendto(m_socket, json, std::strlen(json), 0,
                    reinterpret_cast<sockaddr*>(&client_addr), client_len);
             continue;
         }
@@ -137,20 +162,6 @@ void EmuLinkServer::ServerLoop() {
             std::memcpy(&size, buffer + sizeof(u32), sizeof(u32));
 
             if (size == 0 || size > MAX_READ_SIZE) {
-                continue;
-            }
-
-            // Virtual serial address: return "3DS:<title_id>" for game detection
-            if (address == VIRTUAL_SERIAL_ADDR) {
-                const u64 tid = Core::System::GetInstance().GetTitleID();
-                char serial[64];
-                const int len =
-                    std::snprintf(serial, sizeof(serial), "3DS:%016llX",
-                                  static_cast<unsigned long long>(tid));
-                const auto send_size = static_cast<std::size_t>(
-                    std::min(static_cast<int>(size), len));
-                sendto(m_socket, serial, send_size, 0,
-                       reinterpret_cast<sockaddr*>(&client_addr), client_len);
                 continue;
             }
 
