@@ -6,6 +6,7 @@
 #include <cstring>
 #include <memory>
 #include <vector>
+#include <boost/crc.hpp>
 #include <fmt/format.h>
 #include "common/literals.h"
 #include "common/logging/log.h"
@@ -192,6 +193,13 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         if (patch_result != ResultStatus::Success && patch_result != ResultStatus::ErrorNotUsed)
             return patch_result;
 
+        // Compute CRC32 of the full code section for EmuLnk game_hash
+        {
+            boost::crc_32_type crc;
+            crc.process_bytes(code.data(), code.size());
+            system.SetCodeCRC(crc.checksum());
+        }
+
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::move(code);
 
@@ -377,6 +385,16 @@ ResultStatus AppLoader_NCCH::ReadProgramId(u64& out_program_id) {
     if (result != ResultStatus::Success)
         return result;
 
+    return ResultStatus::Success;
+}
+
+ResultStatus AppLoader_NCCH::ReadProductInfo(std::string& out_product_code,
+                                              u16& out_remaster_version) {
+    out_product_code = std::string(
+        reinterpret_cast<const char*>(overlay_ncch->ncch_header.product_code));
+    std::memcpy(&out_remaster_version,
+                overlay_ncch->exheader_header.codeset_info.flags.remaster_version,
+                sizeof(out_remaster_version));
     return ResultStatus::Success;
 }
 

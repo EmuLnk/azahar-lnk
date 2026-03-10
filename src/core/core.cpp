@@ -453,6 +453,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
                   static_cast<u32>(load_result));
     }
 
+    m_product_code.clear();
+    m_remaster_version = 0;
+    app_loader->ReadProductInfo(m_product_code, m_remaster_version);
+
     cheat_engine.LoadCheatFile(title_id);
     cheat_engine.Connect(process->process_id);
 

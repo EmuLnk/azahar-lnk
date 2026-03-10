@@ -315,6 +315,26 @@ public:
         return *app_loader;
     }
 
+    [[nodiscard]] u64 GetTitleID() const {
+        return title_id;
+    }
+
+    [[nodiscard]] const std::string& GetProductCode() const {
+        return m_product_code;
+    }
+
+    [[nodiscard]] u16 GetRemasterVersion() const {
+        return m_remaster_version;
+    }
+
+    [[nodiscard]] u32 GetCodeCRC() const {
+        return m_code_crc;
+    }
+
+    void SetCodeCRC(u32 crc) {
+        m_code_crc = crc;
+    }
+
     /// Frontend Applets
 
     void RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_selector);
@@ -480,6 +500,9 @@ private:
     std::string m_chainloadpath;
     std::optional<u8> m_mem_mode;
     u64 title_id;
+    std::string m_product_code;
+    u16 m_remaster_version{0};
+    u32 m_code_crc{0};
     bool self_delete_pending;
 
     std::mutex signal_mutex;

@@ -223,6 +223,18 @@ public:
     }
 
     /**
+     * Get the product info (product code + remaster version) of the application
+     * @param out_product_code Reference to store the product code into
+     * @param out_remaster_version Reference to store the remaster version into
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus ReadProductInfo(
+        [[maybe_unused]] std::string& out_product_code,
+        [[maybe_unused]] u16& out_remaster_version) {
+        return ResultStatus::ErrorNotImplemented;
+    }
+
+    /**
      * Get the extdata id for the application
      * @param out_extdata_id Reference to store extdata id into
      * @return ResultStatus result of function
