@@ -20,6 +20,7 @@ enum class BooleanSetting(
     SWAP_SCREEN(SettingKeys.swap_screen(), Settings.SECTION_LAYOUT, false),
     INSTANT_DEBUG_LOG(SettingKeys.instant_debug_log(), Settings.SECTION_DEBUG, false),
     ENABLE_RPC_SERVER(SettingKeys.enable_rpc_server(), Settings.SECTION_DEBUG, false),
+    ENABLE_EMULNK_SERVER(SettingKeys.enable_emulnk_server(), Settings.SECTION_DEBUG, true),
     TOGGLE_UNIQUE_DATA_CONSOLE_TYPE(SettingKeys.toggle_unique_data_console_type(), Settings.SECTION_DEBUG, false),
     SWAP_EYES_3D(SettingKeys.swap_eyes_3d(),Settings.SECTION_RENDERER, false),
     PERF_OVERLAY_ENABLE(SettingKeys.performance_overlay_enable(), Settings.SECTION_LAYOUT, false),

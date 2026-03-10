@@ -1819,6 +1819,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.ENABLE_EMULNK_SERVER,
+                    R.string.enable_emulnk_server,
+                    R.string.enable_emulnk_server_desc,
+                    BooleanSetting.ENABLE_EMULNK_SERVER.key,
+                    BooleanSetting.ENABLE_EMULNK_SERVER.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.TOGGLE_UNIQUE_DATA_CONSOLE_TYPE,
                     R.string.toggle_unique_data_console_type,
                     R.string.toggle_unique_data_console_type_desc,

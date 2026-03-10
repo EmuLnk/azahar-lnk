@@ -267,7 +267,9 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         return load_result;
     }
 
-    Core::EmuLnk::EmuLinkServer::Instance().Start();
+    if (Settings::values.enable_emulnk_server) {
+        Core::EmuLnk::EmuLinkServer::Instance().Start();
+    }
 
     stop_run = false;
     pause_emulation = false;
