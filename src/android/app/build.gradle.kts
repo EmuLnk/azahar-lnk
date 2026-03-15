@@ -61,9 +61,7 @@ android {
     }
 
     defaultConfig {
-        // The application ID refers to Lime3DS to allow for
-        // the Play Store listing, which was originally set up for Lime3DS, to still be used.
-        applicationId = "io.github.lime3ds.android"
+        applicationId = "org.emulnk.azaharlnk"
         minSdk = 29
         targetSdk = 35
         versionCode = autoVersion
