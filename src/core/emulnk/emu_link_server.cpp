@@ -106,7 +106,7 @@ void EmuLinkServer::Stop() {
 }
 
 void EmuLinkServer::ServerLoop() {
-    constexpr std::size_t BUFFER_SIZE = 2048;
+    constexpr std::size_t BUFFER_SIZE = 2080;
     u8 buffer[BUFFER_SIZE];
 
     while (m_running) {
@@ -152,6 +152,44 @@ void EmuLinkServer::ServerLoop() {
             sendto(m_socket, json, std::strlen(json), 0,
                    reinterpret_cast<sockaddr*>(&client_addr), client_len);
             continue;
+        }
+
+        // Batch read: "EL" magic (0x45, 0x4C) + count + entries
+        if (received_size >= 4 &&
+            buffer[0] == 0x45 && buffer[1] == 0x4C) {
+            uint16_t count;
+            std::memcpy(&count, buffer + 2, sizeof(uint16_t));
+            if (count > 0 && count <= 256 && received_size >= 4 + count * 8) {
+                u8 response[16384];
+                int resp_off = 4;
+                response[0] = 0x45;
+                response[1] = 0x4C;
+                std::memcpy(response + 2, &count, 2);
+
+                for (uint16_t i = 0; i < count; i++) {
+                    u32 addr, size;
+                    std::memcpy(&addr, buffer + 4 + i * 8, 4);
+                    std::memcpy(&size, buffer + 4 + i * 8 + 4, 4);
+                    if (size > MAX_READ_SIZE) size = MAX_READ_SIZE;
+
+                    if (resp_off + 2 + static_cast<int>(size) <=
+                        static_cast<int>(sizeof(response))) {
+                        u16 len16 = static_cast<u16>(size);
+                        std::memcpy(response + resp_off, &len16, 2);
+                        resp_off += 2;
+                        Core::System::GetInstance().Memory().ReadBlock(
+                            addr, response + resp_off, size);
+                        resp_off += size;
+                    } else {
+                        response[resp_off++] = 0;
+                        response[resp_off++] = 0;
+                    }
+                }
+
+                sendto(m_socket, reinterpret_cast<const char*>(response), resp_off, 0,
+                       reinterpret_cast<sockaddr*>(&client_addr), client_len);
+                continue;
+            }
         }
 
         // Memory read: 8 bytes (u32 address + u32 size)

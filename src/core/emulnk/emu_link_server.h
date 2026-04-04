@@ -42,7 +42,7 @@ private:
     std::string m_metadata_composite;
 
     static constexpr u16 PORT = 55355;
-    static constexpr std::size_t MAX_READ_SIZE = 1024;
+    static constexpr std::size_t MAX_READ_SIZE = 4096;
 };
 
 } // namespace Core::EmuLnk
