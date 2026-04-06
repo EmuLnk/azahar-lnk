@@ -160,11 +160,11 @@ void EmuLinkServer::ServerLoop() {
             uint16_t count;
             std::memcpy(&count, buffer + 2, sizeof(uint16_t));
             if (count > 0 && count <= 256 && received_size >= 4 + count * 8) {
-                u8 response[16384];
+                u8 response[65000];
                 int resp_off = 4;
+                uint16_t actual = 0;
                 response[0] = 0x45;
                 response[1] = 0x4C;
-                std::memcpy(response + 2, &count, 2);
 
                 for (uint16_t i = 0; i < count; i++) {
                     u32 addr, size;
@@ -180,11 +180,18 @@ void EmuLinkServer::ServerLoop() {
                         Core::System::GetInstance().Memory().ReadBlock(
                             addr, response + resp_off, size);
                         resp_off += size;
+                        actual++;
+                    } else if (resp_off + 2 <= static_cast<int>(sizeof(response))) {
+                        response[resp_off++] = 0;
+                        response[resp_off++] = 0;
+                        actual++;
                     } else {
-                        response[resp_off++] = 0;
-                        response[resp_off++] = 0;
+                        break;
                     }
                 }
+
+                response[2] = actual & 0xFF;
+                response[3] = (actual >> 8) & 0xFF;
 
                 sendto(m_socket, reinterpret_cast<const char*>(response), resp_off, 0,
                        reinterpret_cast<sockaddr*>(&client_addr), client_len);
